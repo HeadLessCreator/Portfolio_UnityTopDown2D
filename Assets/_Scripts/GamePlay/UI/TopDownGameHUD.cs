@@ -13,6 +13,8 @@ public class TopDownGameHUD : MonoBehaviour
 
     [Header("Home HUD")]
     [SerializeField] private TextMeshProUGUI totalGoldText;
+    [SerializeField] private TextMeshProUGUI highestScoreText;
+    [SerializeField] private TextMeshProUGUI timeRecordText;
 
     public void SetScore(int score)
     {
@@ -48,6 +50,22 @@ public class TopDownGameHUD : MonoBehaviour
         if (totalGoldText != null)
         {
             totalGoldText.text = amount.ToString();
+        }
+    }
+
+    public void SetHighestScore(int score)
+    {
+        if (highestScoreText != null)
+        {
+            highestScoreText.text = score.ToString();
+        }
+    }
+
+    public void SetTimeRecord(float seconds)
+    {
+        if (timeRecordText != null)
+        {
+            timeRecordText.text = GameSessionTimer.FormatTime(seconds);
         }
     }
 

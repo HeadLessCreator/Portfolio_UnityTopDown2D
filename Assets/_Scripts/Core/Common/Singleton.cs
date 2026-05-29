@@ -2,156 +2,169 @@ using UnityEngine;
 
 public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
 {
-    private static T _instance;
-    private static readonly object _lock = new();
-    private static bool _isApplicationQuitting = false;
-    private static bool _isInitialized = false;
-    private static bool _hasCalledOnSingletonInitialized = false;
+    private static T instance;
+    private static readonly object syncRoot = new object();
+
+    private static bool isApplicationQuitting;
+    private static bool isInitialized;
+    private static bool hasCalledOnSingletonInitialized;
 
     public static T Instance
     {
         get
         {
-            if (_isApplicationQuitting)
+            if (isApplicationQuitting)
             {
-                Debug.Log($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [Singleton] Instance '{typeof(T)}' already destroyed. Returning null.");
                 return null;
             }
 
-            lock (_lock)
+            lock (syncRoot)
             {
-                if (_instance == null)
+                if (instance != null)
                 {
-                    var instances = FindObjectsByType<T>(
-                        FindObjectsInactive.Include,
-                        FindObjectsSortMode.None
-                    );
+                    return instance;
+                }
 
-                    if (instances.Length > 0)
+                T[] instances = FindObjectsByType<T>(FindObjectsInactive.Include);
+
+                if (instances == null || instances.Length == 0)
+                {
+                    Debug.LogWarning($"[Singleton<{typeof(T).Name}>] Instance was requested, but no scene object was found.");
+                    return null;
+                }
+
+                instance = instances[0];
+
+                if (instances.Length > 1)
+                {
+                    Debug.LogWarning($"[Singleton<{typeof(T).Name}>] Multiple instances found. Keeping '{instance.gameObject.name}' and destroying extras.");
+
+                    for (int i = 1; i < instances.Length; i++)
                     {
-                        _instance = instances[0];
-
-                        if (instances.Length > 1)
+                        if (instances[i] == null)
                         {
-                            Debug.Log("~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [Singleton] Multiple instances found. Destroying extras.");
-                            for (int i = 1; i < instances.Length; i++)
-                            {
-                                Destroy(instances[i].gameObject);
-                            }
+                            continue;
                         }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ '{typeof(T)}' [Singleton] instance Null.");
 
-                        return _instance;
-
-                        // GameObject singletonObj = new GameObject($"{typeof(T).Name} (Singleton)");
-                        // _instance = singletonObj.AddComponent<T>();
-                    }
-
-                    _isInitialized = true;
-                    // DontDestroyOnLoad(_instance.gameObject);
-
-                    if (!_hasCalledOnSingletonInitialized)
-                    {
-                        _hasCalledOnSingletonInitialized = true;
-                        (_instance as Singleton<T>)?.OnSingletonInitialized();
+                        Destroy(instances[i].gameObject);
                     }
                 }
-                return _instance;
+
+                InitializeSingleton(instance);
+
+                return instance;
             }
         }
     }
+
+    public static bool IsInitialized => isInitialized && instance != null;
 
     protected virtual void Awake()
     {
-        lock (_lock)
+        lock (syncRoot)
         {
-            if (_instance == null)
+            if (instance == null)
             {
-                Debug.Log($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [ {gameObject.name} ] [Singleton] instance Null.");
-
-                _instance = this as T;
-                _isInitialized = true;
-                if (!IsDontDestroyOnLoad(gameObject))
-                {
-                    DontDestroyOnLoad(gameObject);
-                    Debug.Log($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [ {gameObject.name} ] [Singleton] DontDestroyOnLoad applied.");
-                }
-                else
-                {
-                    Debug.Log($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [ {gameObject.name} ] [Singleton] Already DontDestroyOnLoad.");
-                }
-
-                if (!_hasCalledOnSingletonInitialized)
-                {
-                    Debug.Log($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [ {gameObject.name} ] [Singleton] _hasCalledOnSingletonInitialized True.");
-
-                    _hasCalledOnSingletonInitialized = true;
-                    OnSingletonInitialized();
-                }
+                instance = this as T;
+                InitializeSingleton(instance);
+                return;
             }
-            else if (_instance != this)
+
+            if (instance != this)
             {
-                Debug.LogWarning($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$  [ {gameObject.name} ] [Singleton] Duplicate instance destroyed.");
+                Debug.LogWarning($"[Singleton<{typeof(T).Name}>] Duplicate instance destroyed: {gameObject.name}");
                 Destroy(gameObject);
+                return;
             }
-            else if (!_hasCalledOnSingletonInitialized)
-            {
-                Debug.Log($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$  [ {gameObject.name} ] [Singleton] _hasCalledOnSingletonInitialized True.");
 
-                _hasCalledOnSingletonInitialized = true;
-                OnSingletonInitialized();
-            }
+            InitializeSingleton(instance);
         }
     }
 
-    protected virtual void OnSingletonInitialized() { }
+    private static void InitializeSingleton(T targetInstance)
+    {
+        if (targetInstance == null)
+        {
+            return;
+        }
+
+        isInitialized = true;
+
+        ApplyDontDestroyOnLoad(targetInstance.gameObject);
+
+        if (hasCalledOnSingletonInitialized)
+        {
+            return;
+        }
+
+        hasCalledOnSingletonInitialized = true;
+
+        if (targetInstance is Singleton<T> singleton)
+        {
+            singleton.OnSingletonInitialized();
+        }
+    }
+
+    private static void ApplyDontDestroyOnLoad(GameObject target)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        GameObject root = target.transform.root.gameObject;
+
+        if (IsDontDestroyOnLoad(root))
+        {
+            return;
+        }
+
+        DontDestroyOnLoad(root);
+    }
+
+    private static bool IsDontDestroyOnLoad(GameObject target)
+    {
+        if (target == null)
+        {
+            return false;
+        }
+
+        return target.scene.name == "DontDestroyOnLoad";
+    }
+
+    protected virtual void OnSingletonInitialized()
+    {
+    }
 
     protected virtual void OnDestroy()
     {
-        if (_instance == this)
+        if (instance != this)
         {
-            _instance = null;
-            _isInitialized = false;
-            _hasCalledOnSingletonInitialized = false;
+            return;
         }
+
+        instance = null;
+        isInitialized = false;
+        hasCalledOnSingletonInitialized = false;
     }
 
     protected virtual void OnApplicationQuit()
     {
-        _isApplicationQuitting = true;
+        isApplicationQuitting = true;
     }
 
-    public static bool IsInitialized => _isInitialized && _instance != null;
-
-
-    public virtual void PostInitialize() { }
+    public virtual void PostInitialize()
+    {
+    }
 
     public virtual void ExecutePostInitialization()
     {
         if (!IsInitialized)
         {
-            Debug.LogWarning($"~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$~~~@$ [Singleton<{typeof(T).Name}>] Attempted to call InitializeSettings, but instance is not initialized.");
+            Debug.LogWarning($"[Singleton<{typeof(T).Name}>] PostInitialize was requested before initialization.");
             return;
         }
 
         PostInitialize();
-    }
-
-
-    private static bool IsDontDestroyOnLoad(GameObject gameObject)
-    {
-        Transform current = gameObject.transform;
-        while (current != null)
-        {
-            if (current.parent == null)
-            {
-                return current.gameObject.scene.name == "DontDestroyOnLoad";
-            }
-            current = current.parent;
-        }
-        return false;
     }
 }

@@ -159,7 +159,15 @@ public class TopDownGame : GameBase
         playerHealth?.ResetHealth();
 
         int totalGold = currencyStorage != null
-            ? currencyStorage.GetTotalCurrency(GoldCurrencyId)
+            ? currencyStorage.GetTotalCurrency(GoldCurrencyId) 
+            : 0;
+
+        int highestScore = UserDataManager.Instance != null
+            ? UserDataManager.Instance.HighestScore.Value 
+            : 0;
+
+        float timeRecord = UserDataManager.Instance != null
+            ? UserDataManager.Instance.TimeRecord.Value 
             : 0;
 
         gameHUD?.ResetHUD(
@@ -168,6 +176,8 @@ public class TopDownGame : GameBase
         );
 
         gameHUD?.SetTotalGold(totalGold);
+        gameHUD?.SetHighestScore(highestScore);
+        gameHUD?.SetTimeRecord(timeRecord);
 
         PlayLobbyBgm();
 
@@ -256,8 +266,12 @@ public class TopDownGame : GameBase
 
         int score = currentScore;
         float survivalTime = sessionTimer != null ? sessionTimer.CurrentTime : 0f;
+        float roundedSurvivalTime = Mathf.RoundToInt(survivalTime);
 
-        UIManager.Instance?.GameOverPopupOnOff(true, score, survivalTime, earnedGold);
+        SaveHighestScoreIfNeeded(score);
+        SaveTimeRecordIfNeeded(roundedSurvivalTime);
+
+        UIManager.Instance?.GameOverPopupOnOff(true, score, roundedSurvivalTime, earnedGold);
 
         RequestGameOver();
     }
@@ -350,6 +364,45 @@ public class TopDownGame : GameBase
         {
             playerRoot.SetActive(isActive);
         }
+    }
+
+    private void SaveHighestScoreIfNeeded(int score)
+    {
+        if (UserDataManager.Instance == null)
+        {
+            return;
+        }
+
+        int currentHighestScore = UserDataManager.Instance.HighestScore.Value;
+
+        if (score <= currentHighestScore)
+        {
+            return;
+        }
+
+        UserDataManager.Instance.HighestScore.Value = score;
+
+        Debug.Log($"[TopDownGame] New Highest Score: {score}");
+    }
+
+    private void SaveTimeRecordIfNeeded(float survivalTime)
+    {
+        if (UserDataManager.Instance == null)
+        {
+            return;
+        }
+
+        float roundedTime = Mathf.RoundToInt(survivalTime);
+        float currentRecord = UserDataManager.Instance.TimeRecord.Value;
+
+        if (roundedTime <= currentRecord)
+        {
+            return;
+        }
+
+        UserDataManager.Instance.TimeRecord.Value = roundedTime;
+
+        Debug.Log($"[TopDownGame] New Time Record: {GameSessionTimer.FormatTime(survivalTime)}");
     }
 
     private void OnDestroy()

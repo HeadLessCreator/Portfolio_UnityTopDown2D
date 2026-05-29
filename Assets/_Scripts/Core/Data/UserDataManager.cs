@@ -11,6 +11,7 @@ public class UserDataManager : Singleton<UserDataManager>
         CurrentLevel,
         CurrentScore,
         HighestScore,
+        TimeRecord,
         SoundEffectVolume,
         BGMVolume,
         IsHapticOn,
@@ -26,6 +27,7 @@ public class UserDataManager : Singleton<UserDataManager>
         { DataKey.CurrentLevel, new KeyInfo(typeof(int), 1) },
         { DataKey.CurrentScore, new KeyInfo(typeof(int), 0) },
         { DataKey.HighestScore, new KeyInfo(typeof(int), 0) },
+        { DataKey.TimeRecord, new KeyInfo(typeof(float), 0f) },
         { DataKey.SoundEffectVolume, new KeyInfo(typeof(float), 1f) },
         { DataKey.BGMVolume, new KeyInfo(typeof(float), 1f) },
         { DataKey.IsHapticOn, new KeyInfo(typeof(bool), true) },
@@ -320,7 +322,7 @@ public class UserDataManager : Singleton<UserDataManager>
 
     public UserDataProperty<int> CurrentScore { get; } = new(DataKey.CurrentScore);
     public UserDataProperty<int> HighestScore { get; } = new(DataKey.HighestScore);
-
+    public UserDataProperty<float> TimeRecord { get; } = new(DataKey.TimeRecord);
     public UserDataProperty<float> SoundEffectVolume { get; } = new(DataKey.SoundEffectVolume);
     public UserDataProperty<float> BGMVolume { get; } = new(DataKey.BGMVolume);
     public UserDataProperty<bool> IsHapticOn { get; } = new(DataKey.IsHapticOn);
