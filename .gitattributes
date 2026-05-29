@@ -51,3 +51,17 @@
 # Fonts
 *.ttf filter=lfs diff=lfs merge=lfs -text
 *.otf filter=lfs diff=lfs merge=lfs -text
+
+# Native plugins / external SDK binaries
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.so filter=lfs diff=lfs merge=lfs -text
+*.bundle filter=lfs diff=lfs merge=lfs -text
+*.aar filter=lfs diff=lfs merge=lfs -text
+*.srcaar filter=lfs diff=lfs merge=lfs -text
+*.framework filter=lfs diff=lfs merge=lfs -text
+*.a filter=lfs diff=lfs merge=lfs -text
+
+# Large Unity asset exceptions
+Assets/TextMesh[[:space:]]Pro/Resources/Fonts[[:space:]]&[[:space:]]Materials/LiberationSans[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
+Assets/TextMesh[[:space:]]Pro/Fonts/Pretendard-ExtraBold[[:space:]]SDF.asset filter=lfs diff=lfs merge=lfs -text
+Assets/Settings/Lit2DSceneTemplate.scenetemplate filter=lfs diff=lfs merge=lfs -text
