@@ -24,7 +24,7 @@ public class UIManager : MonoBehaviour
     [Header("Canvas Pools")]
     [SerializeField] private List<PopupManager.CanvasPool> sceneCanvasPools = new();
 
-    private bool resumeGameWhenSettingsClosed;
+    private bool resumeOnClose;
 
     private void Awake()
     {
@@ -154,10 +154,16 @@ public class UIManager : MonoBehaviour
 
     public void OpenSettings()
     {
+        if (settingsPanel == null)
+            return;
+
+        if (settingsPanel.activeSelf)
+            return;
+
         bool isPlaying = GameStateManager.Instance != null &&
                          GameStateManager.Instance.CurrentState == GameState.Playing;
 
-        resumeGameWhenSettingsClosed = isPlaying;
+        resumeOnClose = isPlaying;
 
         if (isPlaying)
         {
@@ -165,18 +171,18 @@ public class UIManager : MonoBehaviour
         }
 
         SetActive(settingsPanel, true);
-        PlayButtonSound(1);
+        PlayButtonSound(6);
     }
 
     public void CloseSettings()
     {
         SetActive(settingsPanel, false);
 
-        if (resumeGameWhenSettingsClosed)
-        {
-            resumeGameWhenSettingsClosed = false;
-            GameManager.Instance?.ResumeGame();
-        }
+        if (!resumeOnClose)
+            return;
+
+        resumeOnClose = false;
+        GameManager.Instance?.ResumeGame();
     }
 
     public void ToggleSettings()

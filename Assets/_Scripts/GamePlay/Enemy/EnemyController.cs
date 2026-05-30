@@ -140,7 +140,6 @@ public class EnemyController : MonoBehaviour
     {
         if (!IsPlaying())
         {
-            ChangeState(EnemyState.Idle);
             return;
         }
 
@@ -174,6 +173,11 @@ public class EnemyController : MonoBehaviour
         }
 
         if (target == null)
+        {
+            return;
+        }
+
+        if (currentState == EnemyState.Die)
         {
             return;
         }

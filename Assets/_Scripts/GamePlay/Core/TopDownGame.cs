@@ -154,9 +154,8 @@ public class TopDownGame : GameBase
         enemySpawner?.ClearAllEnemies();
 
         ResetPlayer();
-        SetPlayerActive(false);
-
         playerHealth?.ResetHealth();
+        SetPlayerActive(false);
 
         int totalGold = currencyStorage != null
             ? currencyStorage.GetTotalCurrency(GoldCurrencyId) 
