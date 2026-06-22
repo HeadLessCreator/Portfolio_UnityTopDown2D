@@ -1,6 +1,6 @@
-# Unity PC Portfolio Framework
+# Unity Client Framework Portfolio
 
-캐주얼 및 하이퍼 캐주얼 게임 개발을 위한 Unity 기반의 확장 가능한 2D Top-Down 액션 프레임워크입니다.  
+캐주얼 및 하이퍼 캐주얼 게임 개발을 위한 Unity 기반의 확장 가능한 2D 유니티 프레임워크입니다.  
 단순한 단일 게임 구현을 넘어, 다양한 프로젝트에 즉시 재사용할 수 있도록 **앱 실행 흐름, 상태 관리(FSM), 동적 리소스 로딩(Addressables), 그리고 도메인별 책임이 분리된 모듈화 아키텍처**를 구축하는 것을 목표로 설계되었습니다.
 
 ---
